@@ -1,7 +1,8 @@
 
 import { Inter } from 'next/font/google'
 const inter = Inter({ subsets: ['latin'] })
-
+import Link from "next/link";
+import dbConnect from "../../lib/dbConnect";
 
 export default function Home() {
   return (
@@ -10,4 +11,13 @@ export default function Home() {
     </>
 
   )
+}
+
+export const getStaticProps = async () =>{
+    await dbConnect();
+    return{
+        props: {
+
+        }
+    }
 }
