@@ -2,11 +2,16 @@
  *      MongoDB Connection
  *
  *  */
-import mongoose from 'mongoose'
+import mongoose, { Connection } from 'mongoose'
 const BBDD_URL = process.env.BBDD_URL
 
+declare global {
+    var mongoose : any
+}
 
-if (! process.env.BBDD_URL) {
+
+
+if (!BBDD_URL) {
     throw new Error(
         'Please define the MONGODB_URL environment variable inside .env.local'
     )
@@ -17,7 +22,7 @@ if (! process.env.BBDD_URL) {
  * in development. This prevents connections growing exponentially
  * during API Route usage.
  */
-let cached = global.mongoose
+let cached = global.mongoose 
 
 if (!cached) {
     cached = global.mongoose = { conn: null, promise: null }
@@ -33,12 +38,13 @@ async function dbConnect() {
             useNewUrlParser: true,
             useUnifiedTopology: true,
             bufferCommands: false,
+            serverSelectionTimeoutMS:30000, 
             //   bufferMaxEntries: 0,
             //   useFindAndModify: false,
             //   useCreateIndex: true,
         }
 
-        cached.promise = mongoose.connect(BBDD_URL, opts).then((mongoose : any) => {
+        cached.promise = mongoose.connect(BBDD_URL!, opts).then((mongoose: any) => {
             console.log('MongoDB Connected')
             return mongoose
 
