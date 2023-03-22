@@ -16,7 +16,7 @@ export default function Home({ data }: { data: IUser[] }) {
 }
 
 export const getStaticProps = async () => {
-	await dbConnect();
+	await dbConnect(); 
 	const response = await fetch("http://localhost:3000/api/user/getUsers");
 	const data = await response.json();
 	return {
@@ -25,3 +25,4 @@ export const getStaticProps = async () => {
 		},
 	};
 };
+

@@ -1,5 +1,5 @@
 import { prop, getModelForClass } from "@typegoose/typegoose"
-
+// import { Icon } from "next/dist/lib/metadata/types/metadata-types"
 class User {
     /**
      * @prop() is a decorator from typegoose that tells it to create a property
@@ -25,3 +25,4 @@ class User {
 
 const UserModel = getModelForClass(User)
 export default UserModel
+
