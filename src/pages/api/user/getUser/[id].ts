@@ -6,9 +6,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
         const id = req.query.id;
         const user = await UserModel.findById(id);
-        if(!user) return res.status(404).json({ message: "User not found" })
+        if (!user) return res.status(404).json({ message: "User not found" })
         return res.status(200).json(user);
-    }catch (e: any) {
+    } catch (e: any) {
         throw new Error("Server Error", e);
     }
 }
