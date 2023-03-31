@@ -1,5 +1,5 @@
 import { trpc } from "@/utils/trpc";
-import { useRef } from "react";
+import { useRef, useEffect, LegacyRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -16,7 +16,7 @@ const Main = () => {
 	const [data, setData] = useState<any>([]);
 	const [PickerOn, setPickerOn] = useState(false);
 
-	const messagesEndRef = useRef(null);
+	const containerRef = useRef<HTMLDivElement>(null);
 
 	// if (messagesEndRef.current) {
 	// 	messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -50,14 +50,18 @@ const Main = () => {
 		setPickerOn(!PickerOn);
 	};
 
+	const scrollIntoView = (el : any) => {
+		if (el) {
+			el.scrollIntoView({ behavior: "smooth" });
+		}
+	};
 	return (
 		<div className="w-screen h-screen bg-base-300 ">
-			<div className="w-full h-[90dvh] overflow-y-scroll p-10 flex flex-col justify-end  ">
-				<div className="w-full h-[100%]">
-					{data.map((Message: IMessage, index:number) => {
-						return (
+			<ul className="w-full h-[90%] p-10 overflow-y-auto flex-grow-1 scrollbar-hide">
+				{data.map((Message: IMessage, index: number) => {
+					return (
+						<li key={index} ref={scrollIntoView} className=''>
 							<div
-								key={index}
 								className={`chat ${
 									Message.id === user?.id ? "chat-start" : "chat-end"
 								}`}
@@ -89,13 +93,13 @@ const Main = () => {
 									>
 										{Message.date}
 									</div>
-									<p>{Message.text}</p>									
+									<p>{Message.text}</p>
 								</div>
 							</div>
-						);
-					})}
-				</div>
-			</div>
+						</li>
+					);
+				})}
+			</ul>
 			<div className="h-[10%] p-4 flex gap-4  bg-neutral-focus">
 				<form
 					onSubmit={onSubmit}
