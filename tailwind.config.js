@@ -11,7 +11,7 @@ module.exports = {
   // theme: {
   //   extend: {},
   daisyui:{
-    themes: ["fantasy", "dracula", "cmyk"]
+    themes: ["dracula", "dracula", "cmyk"]
   },
   plugins: [require("daisyui"), require('tailwind-scrollbar-hide')],
 }

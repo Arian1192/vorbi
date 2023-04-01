@@ -1,12 +1,13 @@
 import { trpc } from "@/utils/trpc";
 import { useRef, useEffect, LegacyRef } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { EmojiClickData } from "emoji-picker-react";
 import IMessage from "@/interfaces/IMessage";
-
+import type { IOrganizationProps } from "../../pages/home";
 import dynamic from "next/dynamic";
+import OrganizationContext from "@/Contexts/OrganizationContext";
 const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
 const Main = () => {
@@ -15,13 +16,7 @@ const Main = () => {
 	const { user } = useUser();
 	const [data, setData] = useState<any>([]);
 	const [PickerOn, setPickerOn] = useState(false);
-
-	const containerRef = useRef<HTMLDivElement>(null);
-
-	// if (messagesEndRef.current) {
-	// 	messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-	// }
-
+	const { organizationId } = useContext(OrganizationContext);
 	const mutation = trpc.socketRouter.message.useMutation();
 
 	const onSubmit = handleSubmit(async (data) => {
@@ -50,7 +45,7 @@ const Main = () => {
 		setPickerOn(!PickerOn);
 	};
 
-	const scrollIntoView = (el : any) => {
+	const scrollIntoView = (el: any) => {
 		if (el) {
 			el.scrollIntoView({ behavior: "smooth" });
 		}
@@ -58,9 +53,10 @@ const Main = () => {
 	return (
 		<div className="w-screen h-screen bg-base-300 ">
 			<ul className="w-full h-[90%] p-10 overflow-y-auto flex-grow-1 scrollbar-hide">
+				<p className="text-slate-400">Organizacion con id ▶️ {organizationId}</p>
 				{data.map((Message: IMessage, index: number) => {
 					return (
-						<li key={index} ref={scrollIntoView} className=''>
+						<li key={index} ref={scrollIntoView} className="">
 							<div
 								className={`chat ${
 									Message.id === user?.id ? "chat-start" : "chat-end"
