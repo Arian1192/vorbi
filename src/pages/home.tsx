@@ -19,9 +19,9 @@ export default function Home() {
 		setAsideOpen(!asideOpen);
 	};
 
-	const { organizationId, setOrganizationId } = useContext(OrganizationContext);
+	const { organizationId } = useContext(OrganizationContext);
 
-	console.log("este es el organizationId", organizationId);
+	
 
 	return (
 		<div className="w-full h-screen flex">

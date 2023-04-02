@@ -1,6 +1,6 @@
 import "@/styles/globals.css";
 import { trpc } from "../utils/trpc";
-import { SignedIn, SignedOut,  } from "@clerk/nextjs";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { useRouter } from "next/router";
 import type { AppProps } from "next/app";
 import type { AppRouter } from "../server/routers/_app";
@@ -68,7 +68,7 @@ export default withTRPC<AppRouter>({
 				// adds pretty logs to your console in development and logs errors in production
 				loggerLink({
 					enabled: (opts) =>
-						(process.env.APP_URL === "http://localhost:3000" &&
+						(process.env.NODE_ENV === "development" &&
 							typeof window !== "undefined") ||
 						(opts.direction === "down" && opts.result instanceof Error),
 				}),

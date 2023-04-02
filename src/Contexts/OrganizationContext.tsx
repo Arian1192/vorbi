@@ -21,7 +21,6 @@ export const OrganizationContextProvider = ({ children }: any) => {
 		}),
 		[organizationId]
 	);
-		console.log(organizationId)
 	return (
 		<OrganizationContext.Provider value={values}>
 			{children}

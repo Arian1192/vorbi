@@ -12,4 +12,5 @@
 //     links: [wsLink<AppRouter>({ client: wsClient() })],
 // });
 
-export {}
+
+export { }

@@ -1,19 +1,37 @@
 import { useOrganizationList } from "@clerk/nextjs";
 import Link from "next/link";
-import { useContext } from "react";
+import { useContext, useState, useEffect } from "react";
 import OrganizationContext from "@/Contexts/OrganizationContext";
-interface IOrganizationProps {
-	setOrganizationId: (id: String) => void;
-}
+import { trpc } from "@/utils/trpc";
+import { useUser } from "@clerk/nextjs";
 
 const OrganizationList = () => {
 	const { organizationList, isLoaded } = useOrganizationList();
-
-	const { setOrganizationId } = useContext(OrganizationContext);
-
+	const { setOrganizationId, organizationId } = useContext(OrganizationContext);
+	const [data, setData] = useState<any>(null);
 	if (!isLoaded) {
 		return null;
 	}
+	const { user } = useUser();
+	const mutation = trpc.roomRouter.JoinRoom.useMutation();
+
+	const handleOrganization = (id: string) => {
+		setOrganizationId(id);
+		mutation.mutate({
+			socketRoom: id,
+			type: "Join",
+			userId: user?.id as string,
+		});
+	};
+
+	trpc.roomRouter.onJoinRoom.useSubscription(undefined, {
+		onData(data) {
+			setData(data);
+		},
+	});
+
+	console.log(data);
+
 	return (
 		<div>
 			{organizationList.length === 0 && null}
@@ -21,7 +39,7 @@ const OrganizationList = () => {
 				{organizationList.map(({ organization }) => (
 					<li
 						key={organization.id}
-						onClick={() => setOrganizationId(organization?.id)}
+						onClick={() => handleOrganization(organization?.id)}
 					>
 						{/* <Link href={`/organizations/switcher?selected=${organization.id}`}> */}
 						<div className="avatar">
@@ -38,3 +56,6 @@ const OrganizationList = () => {
 };
 
 export default OrganizationList;
+function onSubcription(): [any] {
+	throw new Error("Function not implemented.");
+}
