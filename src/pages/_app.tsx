@@ -3,7 +3,7 @@ import { trpc } from "../utils/trpc";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { useRouter } from "next/router";
 import type { AppProps } from "next/app";
-import type { AppRouter } from "../server/routers/_app";
+import type { AppRouter } from "./api/server/routers/_app";
 import { loggerLink } from "@trpc/client/links/loggerLink";
 import { ClerkProvider } from "@clerk/nextjs";
 import SigninComponent from "@/components/sign-in/SigninComponent";
@@ -48,7 +48,7 @@ function getEndingLink() {
 					"Content-Type": "application/json",
 					"Acess-Control-Allow-Origin": "*",
 					"Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS",
-					Authorization: `Bearer ${process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}`,
+					Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
 				};
 			},
 		});

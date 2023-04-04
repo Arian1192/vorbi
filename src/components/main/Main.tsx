@@ -5,9 +5,9 @@ import { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { EmojiClickData } from "emoji-picker-react";
 import IMessage from "@/interfaces/IMessage";
-import type { IOrganizationProps } from "../../pages/home";
 import dynamic from "next/dynamic";
 import OrganizationContext from "@/Contexts/OrganizationContext";
+import { wsLink } from "@trpc/client";
 const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
 const Main = () => {
@@ -17,21 +17,46 @@ const Main = () => {
 	const [data, setData] = useState<any>([]);
 	const [PickerOn, setPickerOn] = useState(false);
 	const { organizationId } = useContext(OrganizationContext);
-	const mutation = trpc.socketRouter.message.useMutation();
+	const [actualRoom, setActualRoom] = useState<string>("");
+	const [onNotificationMessage, setOnNotificationMessage] = useState<any>({});
+	const [handleNotification, setHandleNotification] = useState(false);
+	const [clientId, setClientId] = useState<string>("");
 
+	// que se ejecute cuando cambie el id de la organizacion
+	useEffect(() => {
+		setActualRoom(organizationId);
+	}, [organizationId]);
+	console.log("actual room despues el useEffect", actualRoom);
+
+	// Mutation
+	const mutation = trpc.messageRouter.message.useMutation();
+
+	// quiero mandar el mensaje solo a la room que estoy
+	// y que no se mande a todas las rooms
 	const onSubmit = handleSubmit(async (data) => {
 		mutation.mutate({
-			text: data.message,
+			socketRoom: actualRoom,
 			id: user?.id,
-			urlimageProfile: user?.profileImageUrl,
+			text: data.message,
+			urlImageProfile: user?.profileImageUrl,
 			date: new Date().toLocaleTimeString(),
 		});
 		reset();
 	});
 
-	trpc.socketRouter.onMessage.useSubscription(undefined, {
-		onData(value) {
-			setData((prev: any) => [...prev, value]);
+	// Subscription to newMessage
+	trpc.messageRouter.onNewMessage.useSubscription(undefinded, {
+		onData(message) {
+			if(message.socketRoom === actualRoom) {
+				setData((data: any) => [...data, message]);
+			}else if(message.socketRoom !== actualRoom){
+				setOnNotificationMessage(message);
+				setHandleNotification(true);
+				setTimeout(() => {
+					setHandleNotification(false);
+				}, 3000);
+			}
+
 		},
 	});
 
@@ -50,10 +75,29 @@ const Main = () => {
 			el.scrollIntoView({ behavior: "smooth" });
 		}
 	};
+
 	return (
 		<div className="w-screen h-screen bg-base-300 ">
+			{handleNotification && (
+				<div className="fixed bottom-16 left-5 p-4 m-4 bg-green-500 rounded shadow-xl animate-slideInDown">
+					<div className="flex items-center space-x-4">
+						<div className="flex-shrink-0 flex justify-center items-center gap-5 ">
+							<img
+								className="w-10 h-10 rounded-full"
+								src={onNotificationMessage?.urlImageProfile}
+								alt=""
+							/>
+							<p>{onNotificationMessage.text}</p>
+						</div>
+					</div>
+				</div>
+			)}
 			<ul className="w-full h-[90%] p-10 overflow-y-auto flex-grow-1 scrollbar-hide">
-				<p className="text-slate-400">Organizacion con id ▶️ {organizationId}</p>
+				<p className="text-slate-400">
+					Organization with id ▶️ {organizationId} and clientSocketId ▶️
+					{clientId}
+				</p>
+
 				{data.map((Message: IMessage, index: number) => {
 					return (
 						<li key={index} ref={scrollIntoView} className="">
@@ -68,7 +112,7 @@ const Main = () => {
 											src={
 												Message.id === user?.id
 													? user?.profileImageUrl
-													: Message.urlimageProfile
+													: Message.urlImageProfile
 											}
 										/>
 									</div>

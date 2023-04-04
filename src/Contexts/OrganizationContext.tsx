@@ -13,7 +13,6 @@ interface IOrganizationStateProps {
 
 export const OrganizationContextProvider = ({ children }: any) => {
 	const [organizationId, setOrganizationId] = useState('');
-
 	const values: IOrganizationStateProps = useMemo(
 		() => ({
 			organizationId,

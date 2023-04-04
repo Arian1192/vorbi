@@ -1,10 +1,6 @@
-import { useState } from "react";
 import dbConnect from "../../lib/dbConnect";
-import IUser from "../interfaces/IUser";
-import Image from "next/image";
-import { RedirectToSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/router";
-import { trpc } from "../utils/trpc";
+
 
 /**
  * {data} : {data: User[]} is a type anotation for typescript
@@ -20,7 +16,7 @@ export default function Home() {
 	return (
 		<div className="w-full h-screen border-2 border-slate-800 flex flex-row gap-10 p-10">
 			<button className="btn w-64" onClick={handleClick}>
-				Go to Signin
+				Go to Signing
 			</button>
 		</div>
 	);

@@ -1,12 +1,12 @@
 // Este es el Main appRouter
 import { router } from '../trpc'
-import { userRouter } from '../routers/userRouter'
-import { socketRouter } from '../routers/socketRouter'
+import { userRouter } from './userRouter'
+import { messageRouter } from './messageRouter'
 import { roomRouter } from './roomRouter'
 
 export const appRouter = router({
-    getUserData: userRouter.getUserData,
-    socketRouter: socketRouter,
+    getUserData: userRouter,
+    messageRouter: messageRouter,
     roomRouter: roomRouter
 })
 

@@ -19,6 +19,9 @@ wss.on('connection', (client) => {
     clientMap.set(clientId, client)
     console.log(`➕➕ Connection (${wss.clients.size}) ${clientId}`);
     wss.setMaxListeners(wss.clients.size);
+
+
+    client.send(JSON.stringify({ type: 'connected', clientId }));
     client.once('close', () => {
         clientMap.delete(clientId);
         console.log(`➖➖ Connection (${wss.clients.size})`);

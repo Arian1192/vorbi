@@ -7,13 +7,14 @@ import {
 import OrganizationAside from "../components/organizationAside/OrganizationAside";
 import Aside from "../components/aside/Aside";
 import Main from "../components/main/Main";
+import { trpc } from "@/utils/trpc";
 
 export default function Home() {
 	const [asideOpen, setAsideOpen] = useState<boolean>(false);
 	const { user } = useUser();
 	const userId: string = user?.id || "";
 
-	// const data = trpc.getUserData.useQuery({userId});
+	// const data = trpc.getUserData.getUserData.useQuery({ userId})
 
 	const handleAsideOpen = () => {
 		setAsideOpen(!asideOpen);
@@ -21,7 +22,7 @@ export default function Home() {
 
 	const { organizationId } = useContext(OrganizationContext);
 
-	
+	// console.log(data);
 
 	return (
 		<div className="w-full h-screen flex">
