@@ -1,12 +1,12 @@
-import { trpc } from "@/utils/trpc";
-import { useRef } from "react";
+import {  useEffect,  } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { EmojiClickData } from "emoji-picker-react";
 import IMessage from "@/interfaces/IMessage";
-
 import dynamic from "next/dynamic";
+import OrganizationContext from "@/Contexts/OrganizationContext";
+import { SocketContext } from "@/Contexts/SocketIoContext";
 const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
 const Main = () => {
@@ -15,30 +15,46 @@ const Main = () => {
 	const { user } = useUser();
 	const [data, setData] = useState<any>([]);
 	const [PickerOn, setPickerOn] = useState(false);
+	const { organizationId } = useContext(OrganizationContext);
+	const {socket} = useContext(SocketContext)
+	const [actualRoom, setActualRoom] = useState<string>("");
+	const [onNotificationMessage, setOnNotificationMessage] = useState<any>({});
+	const [handleNotification, setHandleNotification] = useState(false);
+	const [clientId, setClientId] = useState<string>("");
 
-	const messagesEndRef = useRef(null);
 
-	// if (messagesEndRef.current) {
-	// 	messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-	// }
 
-	const mutation = trpc.socketRouter.message.useMutation();
+	useEffect(() => {
+		setActualRoom(organizationId);
+		//TODO use trpc to get the previous messages from the database and set them to the state setData
+		setData([]);
+	}, [organizationId]);
 
-	const onSubmit = handleSubmit(async (data) => {
-		mutation.mutate({
-			text: data.message,
-			id: user?.id,
-			urlimageProfile: user?.profileImageUrl,
-			date: new Date().toLocaleTimeString(),
-		});
-		reset();
-	});
 
-	trpc.socketRouter.onMessage.useSubscription(undefined, {
-		onData(value) {
-			setData((prev: any) => [...prev, value]);
-		},
-	});
+	useEffect(() => {
+		const handleReplay = (data: IMessage) => {
+			console.log("el mensaje recibido es", data);
+			setData((prevData: any) => [...prevData, data]);
+		}
+		if(socket !== undefined){
+			socket.on("replyMessage", handleReplay);
+		}
+		return(() => {
+			if(socket !== undefined) {
+				socket.off("replyMessage", handleReplay);
+			}
+		})
+	},[data])
+
+
+
+	const onSubmit = (data: IMessage) => {
+		const {message} = data
+		const messageData = {socketRoom: actualRoom, text: message, id : user?.id, urlImageProfile: user?.profileImageUrl , date : new Date().toLocaleTimeString()}
+		setData((prevData: any) => [...prevData, messageData]);
+		socket.emit("newMessage", messageData);
+		reset()
+	}
 
 	const handleEmojiClick = (emoji: EmojiClickData) => {
 		const prevMessage = getValues("message");
@@ -50,14 +66,38 @@ const Main = () => {
 		setPickerOn(!PickerOn);
 	};
 
+	const scrollIntoView = (el: any) => {
+		if (el) {
+			el.scrollIntoView({ behavior: "smooth" });
+		}
+	};
+
 	return (
 		<div className="w-screen h-screen bg-base-300 ">
-			<div className="w-full h-[90dvh] overflow-y-scroll p-10 flex flex-col justify-end  ">
-				<div className="w-full h-[100%]">
-					{data.map((Message: IMessage, index:number) => {
-						return (
+			{handleNotification && (
+				<div className="fixed bottom-16 left-5 p-4 m-4 bg-green-500 rounded shadow-xl animate-slideInDown">
+					<div className="flex items-center space-x-4">
+						<div className="flex-shrink-0 flex justify-center items-center gap-5 ">
+							<img
+								className="w-10 h-10 rounded-full"
+								src={onNotificationMessage?.urlImageProfile}
+								alt=""
+							/>
+							<p>{onNotificationMessage.text}</p>
+						</div>
+					</div>
+				</div>
+			)}
+			<ul className="w-full h-[90%] p-10 overflow-y-auto flex-grow-1 scrollbar-hide">
+				<p className="text-slate-400">
+					Organization with id ▶️ {organizationId} and clientSocketId ▶️
+					{clientId}
+				</p>
+
+				{data.map((Message: IMessage, index: number) => {
+					return (
+						<li key={index} ref={scrollIntoView} className="">
 							<div
-								key={index}
 								className={`chat ${
 									Message.id === user?.id ? "chat-start" : "chat-end"
 								}`}
@@ -68,7 +108,7 @@ const Main = () => {
 											src={
 												Message.id === user?.id
 													? user?.profileImageUrl
-													: Message.urlimageProfile
+													: Message.urlImageProfile
 											}
 										/>
 									</div>
@@ -89,16 +129,16 @@ const Main = () => {
 									>
 										{Message.date}
 									</div>
-									<p>{Message.text}</p>									
+									<p>{Message.text}</p>
 								</div>
 							</div>
-						);
-					})}
-				</div>
-			</div>
+						</li>
+					);
+				})}
+			</ul>
 			<div className="h-[10%] p-4 flex gap-4  bg-neutral-focus">
 				<form
-					onSubmit={onSubmit}
+					onSubmit={handleSubmit(onSubmit)}
 					className="w-full flex flex-row justify-center items-end gap-5"
 				>
 					<input

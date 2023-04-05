@@ -1,7 +1,8 @@
 interface IMessage {
+	socketRoom: string;
 	text: string;
 	id: string;
-	urlimageProfile: string;
+	urlImageProfile: string;
 	date: string;
 }
 export default IMessage;

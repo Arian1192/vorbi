@@ -6,7 +6,7 @@ dotenv.config({
 })
 
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   serverRuntimeConfig: {
   },
   publicRuntimeConfig: {
