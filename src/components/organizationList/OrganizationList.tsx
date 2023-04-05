@@ -1,56 +1,42 @@
 import { useOrganizationList } from "@clerk/nextjs";
-import Link from "next/link";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useEffect } from "react";
 import OrganizationContext from "@/Contexts/OrganizationContext";
-import { trpc } from "@/utils/trpc";
+import { SocketContext } from "@/Contexts/SocketIoContext";
 import { useUser } from "@clerk/nextjs";
-import { IRoomProps } from "../../pages/api/server/routers/roomRouter";
+import IRoom from "@/interfaces/IRoom";
 
 const OrganizationList = () => {
 	const { organizationList, isLoaded } = useOrganizationList();
 	const { setOrganizationId, organizationId } = useContext(OrganizationContext);
-	const [previouseOrganizationId, setPreviousOrganizationId] =
-		useState<string>(organizationId);
-
-	const [roomData, setRoomData] = useState<string>("");
+	const { socket } = useContext(SocketContext);
 	const orgs = organizationList;
+
+
 	useEffect(() => {
 		const firstOrg = orgs?.[0]?.organization?.id?.toString() || "";
 		setOrganizationId(firstOrg);
+		const data:IRoom = {socketRoom : firstOrg, userId: user?.id}
+		if (socket !== undefined) {
+			socket.emit("joinRoom", data);
+		}
 	}, []);
+
 
 	if (!isLoaded) {
 		return null;
 	}
-	const { user } = useUser();
 
-	// Mutation
-	const mutation = trpc.roomRouter.JoinRoom.useMutation();
+	// eslint-disable-next-line react-hooks/rules-of-hooks
+	const {user} = useUser();
 
-	const handleOrganization = (id: string) => {
-		if (previouseOrganizationId !== id) {
-			mutation.mutate({
-				prevSocketIdRoom: previouseOrganizationId,
-				socketRoom: id,
-				type: "Join",
-				userId: user?.id as string,
-			});
-			setPreviousOrganizationId(id);
+
+	const handleOrganization = (id:string) => {
+		if(socket !== undefined){
+			const data = {socketRoom: id, userId: user?.id || "", previousRoom: organizationId}
+			socket.emit("joinRoom", data);
 		}
 		setOrganizationId(id);
-	};
-
-	// Subscription
-
-	trpc.roomRouter.onJoinRoom.useSubscription(undefined, {
-		onData(value) {
-			setRoomData(value.room);
-		},
-	});
-
-	useEffect(() => {
-		console.log(`the user with id ${user?.id} has joined the room ${roomData}`);
-	}, [roomData]);
+	}
 
 	return (
 		<div>

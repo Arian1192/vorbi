@@ -1,7 +1,6 @@
 interface IRoom {
     socketRoom: string;
-    type: string;
-    userId: string;
-    prevSocketIdRoom?: string;
+    userId?: string | undefined;
+previousRoom: string;
 }
 export default IRoom;

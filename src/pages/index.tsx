@@ -1,13 +1,25 @@
 import dbConnect from "../../lib/dbConnect";
 import { useRouter } from "next/router";
+import io from "socket.io-client";
+import {useEffect} from "react";
 
+let socket: any;
 
-/**
- * {data} : {data: User[]} is a type anotation for typescript
- * Esto se llama una "anotación de tipo" y ayuda al compilador de TypeScript a verificar que se están pasando los tipos de datos correctos a la función o componente. Si se intenta pasar una propiedad "data" que no es un array de objetos "User", el compilador de TypeScript mostrará un error en el código.
- */
 export default function Home() {
 	const router = useRouter();
+
+	// const socketInit = async () =>{
+	// 	await fetch("/api/socket")
+	// 	socket = io()
+	// 	socket.on('connect', ()=>{
+	// 		console.log('connected')
+	// 	})
+	// 	return socket
+	// }
+
+	// useEffect(()=> {
+	// 	socketInit()
+	// }, [])
 
 	const handleClick = () => {
 		router.push("/sign-in");

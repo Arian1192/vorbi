@@ -1,5 +1,4 @@
-import { trpc } from "@/utils/trpc";
-import { useRef, useEffect, LegacyRef } from "react";
+import {  useEffect,  } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
@@ -7,7 +6,7 @@ import { EmojiClickData } from "emoji-picker-react";
 import IMessage from "@/interfaces/IMessage";
 import dynamic from "next/dynamic";
 import OrganizationContext from "@/Contexts/OrganizationContext";
-import { wsLink } from "@trpc/client";
+import { SocketContext } from "@/Contexts/SocketIoContext";
 const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
 const Main = () => {
@@ -17,48 +16,45 @@ const Main = () => {
 	const [data, setData] = useState<any>([]);
 	const [PickerOn, setPickerOn] = useState(false);
 	const { organizationId } = useContext(OrganizationContext);
+	const {socket} = useContext(SocketContext)
 	const [actualRoom, setActualRoom] = useState<string>("");
 	const [onNotificationMessage, setOnNotificationMessage] = useState<any>({});
 	const [handleNotification, setHandleNotification] = useState(false);
 	const [clientId, setClientId] = useState<string>("");
 
-	// que se ejecute cuando cambie el id de la organizacion
+
+
 	useEffect(() => {
 		setActualRoom(organizationId);
+		//TODO use trpc to get the previous messages from the database and set them to the state setData
+		setData([]);
 	}, [organizationId]);
-	console.log("actual room despues el useEffect", actualRoom);
 
-	// Mutation
-	const mutation = trpc.messageRouter.message.useMutation();
 
-	// quiero mandar el mensaje solo a la room que estoy
-	// y que no se mande a todas las rooms
-	const onSubmit = handleSubmit(async (data) => {
-		mutation.mutate({
-			socketRoom: actualRoom,
-			id: user?.id,
-			text: data.message,
-			urlImageProfile: user?.profileImageUrl,
-			date: new Date().toLocaleTimeString(),
-		});
-		reset();
-	});
-
-	// Subscription to newMessage
-	trpc.messageRouter.onNewMessage.useSubscription(undefinded, {
-		onData(message) {
-			if(message.socketRoom === actualRoom) {
-				setData((data: any) => [...data, message]);
-			}else if(message.socketRoom !== actualRoom){
-				setOnNotificationMessage(message);
-				setHandleNotification(true);
-				setTimeout(() => {
-					setHandleNotification(false);
-				}, 3000);
+	useEffect(() => {
+		const handleReplay = (data: IMessage) => {
+			console.log("el mensaje recibido es", data);
+			setData((prevData: any) => [...prevData, data]);
+		}
+		if(socket !== undefined){
+			socket.on("replyMessage", handleReplay);
+		}
+		return(() => {
+			if(socket !== undefined) {
+				socket.off("replyMessage", handleReplay);
 			}
+		})
+	},[data])
 
-		},
-	});
+
+
+	const onSubmit = (data: IMessage) => {
+		const {message} = data
+		const messageData = {socketRoom: actualRoom, text: message, id : user?.id, urlImageProfile: user?.profileImageUrl , date : new Date().toLocaleTimeString()}
+		setData((prevData: any) => [...prevData, messageData]);
+		socket.emit("newMessage", messageData);
+		reset()
+	}
 
 	const handleEmojiClick = (emoji: EmojiClickData) => {
 		const prevMessage = getValues("message");
@@ -142,7 +138,7 @@ const Main = () => {
 			</ul>
 			<div className="h-[10%] p-4 flex gap-4  bg-neutral-focus">
 				<form
-					onSubmit={onSubmit}
+					onSubmit={handleSubmit(onSubmit)}
 					className="w-full flex flex-row justify-center items-end gap-5"
 				>
 					<input
