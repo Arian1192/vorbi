@@ -15,7 +15,7 @@ const OrganizationList = () => {
 	useEffect(() => {
 		const firstOrg = orgs?.[0]?.organization?.id?.toString() || "";
 		setOrganizationId(firstOrg);
-		const data:IRoom = {socketRoom : firstOrg, userId: user?.id}
+		const data:IRoom = {socketRoom : firstOrg, userId: user?.id, previousRoom: ""}
 		if (socket !== undefined) {
 			socket.emit("joinRoom", data);
 		}

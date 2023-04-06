@@ -20,21 +20,17 @@ export default function SocketHandler(req: any, res: any) {
   io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
     console.log("New client connected", socket.id);
 
-
-
     socket.on("newMessage", (data: IMessage) => {
       console.log(data)
-      // socket.to(data.socketRoom).emit("replyMessage", data);
       socket.to(data.socketRoom).emit("replyMessage", data);
     })
 
     socket.on("joinRoom", (data:IRoom) => {
-      const {socketRoom, userId, previousRoom } = data;
-      socket.leave(previousRoom);
-      socket.join(socketRoom);
-      console.log(`User ${userId} left ${previousRoom} and joined room ${socketRoom}`);
-    });
 
+      socket.leave(data.previousRoom);
+      socket.join(data.socketRoom);
+      console.log(`User ${data.userId} left ${data.previousRoom} and joined room ${data.socketRoom}`);
+    });
 
 
     socket.on("disconnect", () => {
