@@ -1,4 +1,4 @@
-import {  useEffect,  } from "react";
+import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
@@ -11,56 +11,62 @@ const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
 const Main = () => {
 	const { register, handleSubmit, reset, setFocus, setValue, getValues } =
-		useForm();
+		useForm<IFormMessage>();
 	const { user } = useUser();
-	const [data, setData] = useState<any>([]);
+	const [data, setData] = useState<IMessage[]>([]);
 	const [PickerOn, setPickerOn] = useState(false);
 	const { organizationId } = useContext(OrganizationContext);
-	const {socket} = useContext(SocketContext)
+	const { socket } = useContext(SocketContext);
 	const [actualRoom, setActualRoom] = useState<string>("");
-	const [onNotificationMessage, setOnNotificationMessage] = useState<any>({});
+	const [onNotificationMessage, setOnNotificationMessage] = useState<any>({}); // TODO: Do a interface for this an set the data previous useEffect
 	const [handleNotification, setHandleNotification] = useState(false);
 	const [clientId, setClientId] = useState<string>("");
 
-
-
 	useEffect(() => {
 		setActualRoom(organizationId);
-		//TODO use trpc to get the previous messages from the database and set them to the state setData
+		// TODO: use trpc to get the previous messages from the database and set them to the state setData
 		setData([]);
 	}, [organizationId]);
 
+	interface IReplyMessage {
+		socketRoom: string;
+	}
 
 	useEffect(() => {
 		const handleReplay = (data: IMessage) => {
-			console.log("el mensaje recibido es", data);
 			setData((prevData: any) => [...prevData, data]);
-		}
-		if(socket !== undefined){
+		};
+		if (socket !== undefined) {
 			socket.on("replyMessage", handleReplay);
 		}
-		return(() => {
-			if(socket !== undefined) {
+		return () => {
+			if (socket !== undefined) {
 				socket.off("replyMessage", handleReplay);
 			}
-		})
-	},[data])
+		};
+	}, [data]);
 
-
-
-	const onSubmit = (data: IMessage) => {
-		const {message} = data
-		const messageData = {socketRoom: actualRoom, text: message, id : user?.id, urlImageProfile: user?.profileImageUrl , date : new Date().toLocaleTimeString()}
-		setData((prevData: any) => [...prevData, messageData]);
-		socket.emit("newMessage", messageData);
-		reset()
+	interface IFormMessage {
+		text: string;
 	}
+	const onSubmit = (data: IFormMessage) => {
+		const messageData = {
+			socketRoom: actualRoom,
+			text: data.text,
+			id: user?.id,
+			urlImageProfile: user?.profileImageUrl,
+			date: new Date().toLocaleTimeString(),
+		};
+		setData((prevData: any) => [...prevData, messageData]);
+		if (socket !== undefined) socket.emit("newMessage", messageData);
+		reset();
+	};
 
 	const handleEmojiClick = (emoji: EmojiClickData) => {
-		const prevMessage = getValues("message");
-		setValue("message", prevMessage + emoji.emoji);
+		const prevMessage = getValues("text");
+		setValue("text", prevMessage + emoji.emoji);
 		setPickerOn(!PickerOn);
-		setFocus("message");
+		setFocus("text");
 	};
 	const handleOpenPicker = () => {
 		setPickerOn(!PickerOn);
@@ -93,7 +99,7 @@ const Main = () => {
 					Organization with id ▶️ {organizationId} and clientSocketId ▶️
 					{clientId}
 				</p>
-
+				{/* TODO: Make a chat component */}
 				{data.map((Message: IMessage, index: number) => {
 					return (
 						<li key={index} ref={scrollIntoView} className="">
@@ -142,7 +148,7 @@ const Main = () => {
 					className="w-full flex flex-row justify-center items-end gap-5"
 				>
 					<input
-						{...register("message")}
+						{...register("text")}
 						type="text"
 						placeholder="Type here"
 						className="input input-bordered w-full "
@@ -155,9 +161,9 @@ const Main = () => {
 						</div>
 					)}
 					{PickerOn && (
-						<div>
+						<div className=" flex flex-box justify-end">
 							<button
-								className="absolute left-[90%] bottom-[5%] z-10"
+								className="absolute bottom-[5%] mr-4 -m-1 z-10"
 								onClick={handleOpenPicker}
 							>
 								❌
@@ -189,5 +195,5 @@ const Main = () => {
 
 export default Main;
 
-// TODO pass trough the new Component Chat props like user and Message to clean the code at Main Component and make it more readable.
-// TODO abstraction of the interface out of the Main Component
+//TODO: pass trough the new Component Chat props like user and Message to clean the code at Main Component and make it more readable.
+//TODO: abstraction of the interface out of the Main Component
